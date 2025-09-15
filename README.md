@@ -10,6 +10,6 @@ To run the solution for Challenge One (delivery cost estimation):
 python [cli.py](http://_vscodecontentref_/0)
 ```
 
-To run the solution for Challenge One (delivery cost estimation):
+To run the solution for Challenge Two:
 
 python [main.py](http://_vscodecontentref_/1)
