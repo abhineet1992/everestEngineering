@@ -3,65 +3,113 @@
 # Packages should meet the required mentioned offer criterias.
 # If offer code is not valid/found, discounted mount will be equal to zero.
 
-class input_for_delivery_cost:
-    def __init__(self):
-        self.first_line = None
+class Package:
+    """
+    Represents a single delivery package and handles cost and discount calculation.
+    """
+    def __init__(self, pkg_id, weight, distance, offer_code, base_fare):
+        self.pkg_id = pkg_id
+        self.weight = weight
+        self.distance = distance
+        self.offer_code = offer_code
+        self.base_fare = base_fare
+        self.discount = 0.0
+        self.total_cost = 0.0
 
-    def read_lines(self):
-        self.first_line = input("Enter the base delivery cost and number of packages:")
-        return self.first_line
-
-    def input_line_parser(self):
-        if self.first_line is None:
-            raise ValueError("No Input found")
-        try:
-            base_fare, no_of_packages = self.first_line.split()
-        except:
-            raise ValueError("Invalid value")
-        return base_fare, no_of_packages
-
-    def check_offer_criteria(self, package):
-        if package['offer_code'] == 'OFR001':
-            if (package['base_distance'] < 200) & (70 < package['pkg_weight'] < 200):
-                return True
-        elif package['offer_code'] == 'OFR002':
-            if (50 < package['base_distance'] < 150) & (100 < package['pkg_weight'] < 250):
-                return True
-        elif package['offer_code'] == 'OFR003':
-            if (50 < package['base_distance'] < 250) & (10 < package['pkg_weight'] < 150):
-                return True
+    def is_offer_applicable(self):
+        """
+        Checks if the offer code is valid for this package.
+        """
+        if self.offer_code == 'OFR001':
+            return 70 < self.weight <= 200 and 0 < self.distance <= 200
+        elif self.offer_code == 'OFR002':
+            return 100 < self.weight <= 250 and 50 < self.distance <= 150
+        elif self.offer_code == 'OFR003':
+            return 10 < self.weight <= 150 and 50 < self.distance <= 250
         return False
 
-    def get_delivery_cost_per_package(self):
-        base_fare = self,input_for_delivery_cost()[0]
-        num_packages = self.input_line_parser()[1]
+    def calculate_cost(self):
+        """
+        Calculates the delivery cost and discount for the package.
+        """
+        base_cost = self.base_fare + self.weight * 10 + self.distance * 5
+        if self.is_offer_applicable():
+            if self.offer_code == 'OFR001':
+                self.discount = 0.1 * base_cost
+            elif self.offer_code == 'OFR002':
+                self.discount = 0.07 * base_cost
+            elif self.offer_code == 'OFR003':
+                self.discount = 0.05 * base_cost
+        self.total_cost = base_cost - self.discount
+
+    def __str__(self):
+        return f"{self.pkg_id} {int(self.discount)} {int(self.total_cost)}"
+
+
+class DeliverySession:
+    """
+    Handles input, parsing, and delivery cost calculation for multiple packages.
+    """
+    def __init__(self):
+        self.base_fare = 0
+        self.num_packages = 0
         self.packages = []
-        for i in range(1, int(num_packages) + 1):
-            pkg_line = input(f"Enter package {i} details")
-            line_splits = pkg_line.split()
-            package = {}
-            package['pkg_id'] = str(line_splits[0])
-            package['pkg_weight'] = float(line_splits[1])
-            package['base_distance'] = float(line_splits[2])
-            package['offer_code'] = str(line_splits[3])
-            self.packages.append(package)
-        # return self.packages
 
-        # delivery_cost = 0
+    def read_input(self):
+        """
+        Reads and parses the base fare and number of packages.
+        """
+        first_line = input("Enter the base delivery cost and number of packages: ")
+        try:
+            base_fare, num_packages = first_line.split()
+            self.base_fare = float(base_fare)
+            self.num_packages = int(num_packages)
+        except Exception:
+            raise ValueError("Invalid input for base fare and number of packages.")
+
+    def read_packages(self):
+        """
+        Reads and parses package details from user input.
+        """
+        for i in range(1, self.num_packages + 1):
+            pkg_line = input(f"Enter package {i} details: ")
+            try:
+                pkg_id, weight, distance, offer_code = pkg_line.split()
+                package = Package(
+                    pkg_id=pkg_id,
+                    weight=float(weight),
+                    distance=float(distance),
+                    offer_code=offer_code,
+                    base_fare=self.base_fare
+                )
+                self.packages.append(package)
+            except Exception:
+                raise ValueError(f"Invalid input for package {i}.")
+
+    def process_packages(self):
+        """
+        Calculates cost and discount for all packages.
+        """
         for package in self.packages:
-            if(self.check_offer_criteria(package)):
-                if package['offer_code'] == 'OFR001':
-                    delivery_cost = 0.9*(base_fare + package['pkg_weight']*10 + package['base_distance']*5)
-                elif package['offer_code'] == 'OFR002':
-                    delivery_cost = 0.93*(base_fare + package['pkg_weight']*10 + package['base_distance']*5)
-                elif package['offer_code'] == 'OFR003':
-                    delivery_cost = 0.95*(base_fare + package['pkg_weight']*10 + package['base_distance']*5)
-            delivery_cost = (base_fare + package['pkg_weight']*10 + package['base_distance']*5)
-            print(f"Delivery cost of package {self.packages['pkg_id']}- {delivery_cost}")
-        # return delivery_cost
+            package.calculate_cost()
 
-inp = input_for_delivery_cost
-# inp.get_delivery_cost_per_package()
-print(inp.get_delivery_cost_per_package())
+    def print_results(self):
+        """
+        Prints the delivery cost and discount for each package.
+        """
+        for package in self.packages:
+            print(package)
 
-# def get_total_delivery_cost()
+    def run(self):
+        """
+        Runs the full delivery session: input, calculation, and output.
+        """
+        self.read_input()
+        self.read_packages()
+        self.process_packages()
+        self.print_results()
+
+
+if __name__ == "__main__":
+    session = DeliverySession()
+    session.run()
